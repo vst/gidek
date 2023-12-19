@@ -30,7 +30,8 @@ import qualified Zamazingo.Text as Z.Text
 -- | Application configuration definition.
 data Config = Config
   { configStore :: !(P.Path P.Abs P.Dir)
-  , configToken :: !T.Text
+  , configToken :: !(Maybe T.Text)
+  , configTokenFile :: !(Maybe (P.Path P.Abs P.File))
   , configRepos :: ![Github.GithubRepoSource]
   }
   deriving (Eq, Generic, Show)
@@ -38,24 +39,23 @@ data Config = Config
 
 -- | 'Aeson.FromJSON' instance for 'Config'.
 --
--- >>> Aeson.decode @Config "{\"repos\":[],\"store\":\"/tmp/gidek/store/\",\"token\":\"gho_hebelehubele\"}"
--- Just (Config {configStore = "/tmp/gidek/store/", configToken = "gho_hebelehubele", configRepos = []})
--- >>> Aeson.decode @Config "{\"repos\":[{\"name\":\"vst/gidek\",\"type\":\"single\"},{\"name\":\"vst\",\"type\":\"user\"},{\"name\":\"fourmolu\",\"type\":\"organization\"}],\"store\":\"/tmp/gidek/store/\",\"token\":\"gho_hebelehubele\"}"
--- Just (Config {configStore = "/tmp/gidek/store/", configToken = "gho_hebelehubele", configRepos = [GithubRepoSourceSingle "vst/gidek",GithubRepoSourceUser "vst",GithubRepoSourceOrganization "fourmolu"]})
--- >>> Z.Aeson.testRoundtrip (Config $(P.mkAbsDir "/tmp/gidek/store") "gho_hebelehubele" [])
--- True
--- >>> Z.Aeson.testRoundtrip (Config $(P.mkAbsDir "/tmp/gidek/store") "gho_hebelehubele" [Github.GithubRepoSourceSingle "vst/gidek", Github.GithubRepoSourceUser "vst", Github.GithubRepoSourceOrganization "fourmolu"])
--- True
+-- >>> Aeson.decode @Config "{\"repos\":[{\"name\":\"vst/gidek\",\"type\":\"single\"},{\"name\":\"vst\",\"type\":\"user\"},{\"name\":\"fourmolu\",\"type\":\"organization\"}],\"store\":\"/tmp/gidek/store/\",\"token\":\"gho_hebelehubele\",\"token_file\":\"/var/run/secrets/github_token\"}"
+-- Just (Config {configStore = "/tmp/gidek/store/", configToken = Just "gho_hebelehubele", configTokenFile = Just "/var/run/secrets/github_token", configRepos = [GithubRepoSourceSingle "vst/gidek",GithubRepoSourceUser "vst",GithubRepoSourceOrganization "fourmolu"]})
 instance Aeson.FromJSON Config where
   parseJSON = Aeson.genericParseJSON _aesonOptionsConfig
 
 
 -- | 'Aeson.FromJSON' instance for 'Config'.
 --
--- >>> Aeson.encode (Config $(P.mkAbsDir "/tmp/gidek/store") "gho_hebelehubele" [])
--- "{\"repos\":[],\"store\":\"/tmp/gidek/store/\",\"token\":\"gho_hebelehubele\"}"
--- >>> Aeson.encode (Config $(P.mkAbsDir "/tmp/gidek/store") "gho_hebelehubele" [Github.GithubRepoSourceSingle "vst/gidek", Github.GithubRepoSourceUser "vst", Github.GithubRepoSourceOrganization "fourmolu"])
--- "{\"repos\":[{\"name\":\"vst/gidek\",\"type\":\"single\"},{\"name\":\"vst\",\"type\":\"user\"},{\"name\":\"fourmolu\",\"type\":\"organization\"}],\"store\":\"/tmp/gidek/store/\",\"token\":\"gho_hebelehubele\"}"
+-- >>> let store = $(P.mkAbsDir "/tmp/gidek/store")
+-- >>> let token = Just "gho_hebelehubele"
+-- >>> let tokenFile = Just $(P.mkAbsFile "/var/run/secrets/github_token")
+-- >>> let repos = [Github.GithubRepoSourceSingle "vst/gidek", Github.GithubRepoSourceUser "vst", Github.GithubRepoSourceOrganization "fourmolu"]
+-- >>> let config = Config {configStore=store, configToken=token, configTokenFile=tokenFile, configRepos=repos}
+-- >>> Aeson.encode config
+-- "{\"repos\":[{\"name\":\"vst/gidek\",\"type\":\"single\"},{\"name\":\"vst\",\"type\":\"user\"},{\"name\":\"fourmolu\",\"type\":\"organization\"}],\"store\":\"/tmp/gidek/store/\",\"token\":\"gho_hebelehubele\",\"token_file\":\"/var/run/secrets/github_token\"}"
+-- >>> Z.Aeson.testRoundtrip config
+-- True
 instance Aeson.ToJSON Config where
   toJSON = Aeson.genericToJSON _aesonOptionsConfig
 
@@ -73,7 +73,7 @@ _aesonOptionsConfig =
 --
 -- >>> path <- (P.</> $(P.mkRelFile "config.tmpl.yaml")) <$> PIO.getCurrentDir
 -- >>> runExceptT (readConfigFile path)
--- Right (Config {configStore = "/tmp/gidek/store/", configToken = "gho_hebelehubele", configRepos = [GithubRepoSourceSingle "vst/gidek",GithubRepoSourceUser "vst",GithubRepoSourceOrganization "fourmolu"]})
+-- Right (Config {configStore = "/tmp/gidek/store/", configToken = Just "gho_hebelehubele", configTokenFile = Just "/var/run/secrets/github_token", configRepos = [GithubRepoSourceSingle "vst/gidek",GithubRepoSourceUser "vst",GithubRepoSourceOrganization "fourmolu"]})
 readConfigFile
   :: MonadIO m
   => MonadError T.Text m

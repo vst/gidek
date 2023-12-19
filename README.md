@@ -41,8 +41,9 @@ Create a configuration file:
 cat <<EOF > config.yaml
 store: /tmp/gidek/store
 token: $(gh auth token)
+token_file: /var/run/secrets/github_token
 repos:
-  - type: repo
+  - type: single
     name: vst/gidek
   - type: user
     name: vst

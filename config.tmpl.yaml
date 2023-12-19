@@ -1,5 +1,6 @@
 store: /tmp/gidek/store
 token: gho_hebelehubele
+token_file: /var/run/secrets/github_token
 repos:
   - type: single
     name: vst/gidek

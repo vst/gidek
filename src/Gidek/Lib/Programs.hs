@@ -80,8 +80,12 @@ buildEnvFromConfig
   => MonadError T.Text m
   => Config.Config
   -> m Env
-buildEnvFromConfig Config.Config {..} =
-  pure $ Env {envStore = configStore, envToken = configToken, envRepoSources = configRepos}
+buildEnvFromConfig Config.Config {..} = do
+  token <- maybe (maybe errMissing readToken configTokenFile) pure configToken
+  pure $ Env {envStore = configStore, envToken = token, envRepoSources = configRepos}
+  where
+    readToken = liftIO . TIO.readFile . P.toFilePath
+    errMissing = throwError "Either \"token\" or \"token_file\" must be specified in the configuration file."
 
 
 -- | Attempts to build and return environment from the given
