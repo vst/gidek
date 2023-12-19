@@ -10,6 +10,7 @@ module Gidek.Lib.Programs where
 import Control.Monad ((>=>))
 import Control.Monad.Except (ExceptT, MonadError (throwError), runExceptT)
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import Control.Monad.Reader (ReaderT, asks, runReaderT)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy as BL
 import Data.String.Interpolate (i)
@@ -30,37 +31,68 @@ import qualified Zamazingo.Text as Z.Text
 -- * Runners
 
 
--- | Runs an action and returns 'ExitCode' in IO monad.
+-- | Type definition for our programs.
+type Program a = ReaderT Env (ExceptT T.Text IO) a
+
+
+-- | Runs the given program with the given environment and returns
+-- 'ExitCode' in IO monad.
 runProgram
-  :: ExceptT T.Text IO a
+  :: Program a
+  -> Env
   -> IO ExitCode
-runProgram act =
-  runExceptT act >>= either _onFail _onSucc
+runProgram prog env =
+  runExceptT (runReaderT prog env) >>= either _onFail _onSucc
   where
     _onFail = TIO.hPutStrLn stderr >=> const (pure (ExitFailure 1))
     _onSucc = const (pure ExitSuccess)
 
 
--- | Reads the configuration file, runs an action with this
--- configuration file and returns 'ExitCode' in IO monad.
+-- | Reads the configuration from the given configuration file, builds
+-- an environment, runs the given program with this environment and
+-- returns 'ExitCode' in IO monad.
 runProgramWithConfigFile
-  :: (Config.Config -> ExceptT T.Text IO a)
+  :: Program a
   -> FilePath
   -> IO ExitCode
-runProgramWithConfigFile act =
-  runProgram . withConfigFromFile act
+runProgramWithConfigFile prog fp = do
+  env <- runExceptT (buildEnvFromConfigFile fp)
+  case env of
+    Left err -> TIO.hPutStrLn stderr err >> pure (ExitFailure 1)
+    Right se -> runProgram prog se
 
 
--- | Reads the configuration file, runs the action with this
--- configuration file and returns its result.
-withConfigFromFile
+-- * Environment
+
+
+-- | Data definition for the environment of our 'Program'.
+data Env = Env
+  { envStore :: !(P.Path P.Abs P.Dir)
+  , envToken :: !T.Text
+  , envRepoSources :: ![Github.GithubRepoSource]
+  }
+
+
+-- | Attempts to build and return environment from the given
+-- configuration.
+buildEnvFromConfig
   :: MonadIO m
   => MonadError T.Text m
-  => (Config.Config -> m a)
-  -> FilePath
-  -> m a
-withConfigFromFile act fp = do
-  PIO.resolveFile' fp >>= Config.readConfigFile >>= act
+  => Config.Config
+  -> m Env
+buildEnvFromConfig Config.Config {..} =
+  pure $ Env {envStore = configStore, envToken = configToken, envRepoSources = configRepos}
+
+
+-- | Attempts to build and return environment from the given
+-- configuration file.
+buildEnvFromConfigFile
+  :: MonadIO m
+  => MonadError T.Text m
+  => FilePath
+  -> m Env
+buildEnvFromConfigFile fp =
+  PIO.resolveFile' fp >>= Config.readConfigFile >>= buildEnvFromConfig
 
 
 -- * Plan
@@ -72,38 +104,27 @@ type Plan = (Github.GithubRepo, P.Path P.Abs P.Dir, Bool)
 
 -- | Attempts to plan what to expect if the application runs backups
 -- for a given configuration.
-plan
-  :: MonadIO m
-  => MonadError T.Text m
-  => Config.Config
-  -> m [Plan]
-plan cfg@Config.Config {..} =
-  Github.listRepositories configToken configRepos >>= mapM (planRepository cfg)
+plan :: Program [Plan]
+plan = do
+  token <- asks envToken
+  sources <- asks envRepoSources
+  Github.listRepositories token sources >>= mapM planRepository
 
 
 -- | Attempts to plan what to expect if the application runs backups
 -- for a given configuration and a single repository.
-planRepository
-  :: MonadIO m
-  => MonadError T.Text m
-  => Config.Config
-  -> Github.GithubRepo
-  -> m Plan
-planRepository cfg repo = do
-  dir <- getRepositoryDirectory cfg repo
+planRepository :: Github.GithubRepo -> Program Plan
+planRepository repo = do
+  dir <- getRepositoryDirectory repo
   exists <- PIO.doesDirExist dir
   pure (repo, dir, exists)
 
 
 -- | Attempts to plan what to expect if the application runs backups
 -- for a given configuration and prettyprints plans in a table format.
-planAndPrint
-  :: MonadIO m
-  => MonadError T.Text m
-  => Config.Config
-  -> m ()
+planAndPrint :: Program ()
 planAndPrint =
-  plan >=> printPlans
+  plan >>= printPlans
 
 
 -- | Prettyprints plans in a table format
@@ -142,32 +163,26 @@ printPlans = do
 
 -- | Performs backup procedure for all repositories of interest as per
 -- given configuration.
-backup
-  :: MonadIO m
-  => MonadError T.Text m
-  => Config.Config
-  -> m ()
-backup cfg@Config.Config {..} = do
-  repos <- Github.listRepositories configToken configRepos
+backup :: Program ()
+backup = do
+  token <- asks envToken
+  sources <- asks envRepoSources
+  repos <- Github.listRepositories token sources
   _log "Starting backup process..."
-  mapM_ (backupRepository cfg) repos
+  mapM_ backupRepository repos
   _log "Finished backup process."
 
 
 -- | Runs backup procedure on a single repository.
-backupRepository
-  :: MonadIO m
-  => MonadError T.Text m
-  => Config.Config
-  -> Github.GithubRepo
-  -> m ()
-backupRepository cfg@Config.Config {..} repo@Github.GithubRepo {..} = do
+backupRepository :: Github.GithubRepo -> Program ()
+backupRepository repo@Github.GithubRepo {..} = do
+  token <- asks envToken
   _log [i|Cloning #{githubRepoOwner}/#{githubRepoName}|]
-  dir <- getRepositoryBackupDirectory cfg repo
-  metadataFile <- getRepositoryMetadataFile cfg repo
+  dir <- getRepositoryBackupDirectory repo
+  metadataFile <- getRepositoryMetadataFile repo
   PIO.ensureDir (P.parent metadataFile)
   liftIO (BL.writeFile (P.toFilePath metadataFile) (Aeson.encode repo))
-  Git.backup (_buildUri configToken githubRepoUrl) dir
+  Git.backup (_buildUri token githubRepoUrl) dir
 
 
 -- | Builds URI by injecting GitHub token into the HTTPS uri.
@@ -195,44 +210,22 @@ _log msg = do
 -- * Directories
 
 
--- | Returns the logs directory for a given configuration.
-getLogsDirectory
-  :: Config.Config
-  -> P.Path P.Abs P.Dir
-getLogsDirectory Config.Config {..} =
-  configStore P.</> $(P.mkRelDir "logs")
-
-
--- | Returns the repository directory for a given configuration and a
--- given repository.
-getRepositoryDirectory
-  :: MonadError T.Text m
-  => Config.Config
-  -> Github.GithubRepo
-  -> m (P.Path P.Abs P.Dir)
-getRepositoryDirectory Config.Config {..} Github.GithubRepo {..} =
-  (\x -> configStore P.</> $(P.mkRelDir "backups") P.</> x) <$> reldir
+-- | Returns the repository directory for a given repository.
+getRepositoryDirectory :: Github.GithubRepo -> Program (P.Path P.Abs P.Dir)
+getRepositoryDirectory Github.GithubRepo {..} = do
+  store <- asks envStore
+  (\x -> store P.</> $(P.mkRelDir "backups") P.</> x) <$> reldir
   where
     reldir = either (throwError . ("Invalid repository directory path segment: " <>) . Z.Text.tshow) pure (P.parseRelDir (T.unpack githubRepoId))
 
 
--- | Returns the repository backup directory for a given configuration
--- and a given repository.
-getRepositoryBackupDirectory
-  :: MonadError T.Text m
-  => Config.Config
-  -> Github.GithubRepo
-  -> m (P.Path P.Abs P.Dir)
-getRepositoryBackupDirectory cfg repo =
-  (P.</> $(P.mkRelDir "data")) <$> getRepositoryDirectory cfg repo
+-- | Returns the repository backup directory for a given repository.
+getRepositoryBackupDirectory :: Github.GithubRepo -> Program (P.Path P.Abs P.Dir)
+getRepositoryBackupDirectory repo =
+  (P.</> $(P.mkRelDir "data")) <$> getRepositoryDirectory repo
 
 
--- | Returns the repository metadata file path for a given
--- configuration and a given repository.
-getRepositoryMetadataFile
-  :: MonadError T.Text m
-  => Config.Config
-  -> Github.GithubRepo
-  -> m (P.Path P.Abs P.File)
-getRepositoryMetadataFile cfg repo =
-  (P.</> $(P.mkRelFile "metadata.json")) <$> getRepositoryDirectory cfg repo
+-- | Returns the repository metadata file path for a given repository.
+getRepositoryMetadataFile :: Github.GithubRepo -> Program (P.Path P.Abs P.File)
+getRepositoryMetadataFile repo =
+  (P.</> $(P.mkRelFile "metadata.json")) <$> getRepositoryDirectory repo
