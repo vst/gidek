@@ -1,39 +1,27 @@
-# Haskell Project Template
-
-This is an opinionated template for creating Haskell projects. It uses
-[Nix], [hpack] and [cabal].
+# Backup Git(Hub) Repositories
 
 > **TODO** Provide minimum viable documentation.
 
-## Quickstart
+`gidek` lets you backup Git repositories hosted (for now only) on
+[GitHub].
 
-Create your repository from this template, clone it on your computer
-and enter its directory.
+The idea is that you specify a list of GitHub repositories to backup
+and `gidek` keeps cloning them everytime it is invoked. The list of
+GitHub repositories of interest can be specified as:
 
-Then, run following to configure your project:
+1. Specific GitHub repositories by their `[owner]/[repository-name]`
+   handle, or
+2. All GitHub repositories which belong to specific GitHub users or
+   organizations, ie. owners.
 
-```sh
-bash ./run-template.sh
-```
 
-It will prompt some questions and configure your project according to
-your answers.
+## Development
 
-Once it is configured, provision `direnv`:
+Provision `direnv`:
 
 ```sh
 direnv allow
 ```
-
-And run the big, long build command as given in the next section.
-
-Finally, you can remove the `run-template.sh` script:
-
-```sh
-rm run-template.sh
-```
-
-## Development
 
 Big, long build command for the impatient:
 
@@ -45,13 +33,11 @@ hpack &&
     find . -iname "*.nix" -not -path "*/nix/sources.nix" -print0 | xargs --null nixpkgs-fmt &&
     hlint app/ src/ test/ &&
     cabal build -O0 &&
-    cabal run -O0 haskell-template-hebele -- --version &&
+    cabal run -O0 gidek -- --version &&
     cabal v1-test &&
     cabal haddock -O0
 ```
 
 <!-- REFERENCES -->
 
-[Nix]: https://nixos.org
-[hpack]: https://github.com/sol/hpack
-[cabal]: https://www.haskell.org/cabal
+[GitHub]: https://github.com

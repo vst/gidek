@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | This module provides top-level definitions for the CLI program.
-module Hebele.Cli where
+module Gidek.Cli where
 
 import Control.Applicative ((<**>), (<|>))
 import Control.Monad (join)
@@ -102,7 +102,7 @@ infoModHeader =
 -- | Footer 'OA.InfoMod'.
 infoModFooter :: OA.InfoMod a
 infoModFooter =
-  OA.footer "See <https://github.com/vst/haskell-template-hebele> for help and feedback."
+  OA.footer "See <https://github.com/vst/gidek> for help and feedback."
 
 
 -- | Tests a parser with given arguments.

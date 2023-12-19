@@ -5,23 +5,23 @@ module Zamazingo.Meta where
 
 import qualified Data.Text as T
 import Data.Version (Version, showVersion)
-import qualified Paths_haskell_template_hebele as Paths
+import qualified Paths_gidek as Paths
 
 
 -- | Application name.
 --
 -- >>> name
--- "haskell-template-hebele"
+-- "gidek"
 name :: T.Text
-name = "haskell-template-hebele"
+name = "gidek"
 
 
 -- | Application title.
 --
 -- >>> title
--- "Haskell Project Template"
+-- "Backup Git(Hub) Repositories"
 title :: T.Text
-title = "Haskell Project Template"
+title = "Backup Git(Hub) Repositories"
 
 
 -- | Application version.
