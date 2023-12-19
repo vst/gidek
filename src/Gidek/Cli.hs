@@ -3,7 +3,7 @@
 -- | This module provides top-level definitions for the CLI program.
 module Gidek.Cli where
 
-import Control.Applicative ((<**>))
+import Control.Applicative ((<**>), (<|>))
 import qualified Data.Text as T
 import qualified Gidek.Lib.Programs as Programs
 import qualified Options.Applicative as OA
@@ -40,7 +40,7 @@ optCliOptions :: OA.Parser CliOptions
 optCliOptions =
   CliOptions
     <$> OA.strOption (OA.short 'c' <> OA.long "config" <> OA.metavar "CONFIG-FILE" <> OA.help "Path to configuration file")
-    <*> commandPlan
+    <*> (commandPlan <|> commandBackup)
 
 
 -- | Runs 'CliOptions'.
@@ -66,6 +66,23 @@ commandPlan = OA.hsubparser (OA.command "plan" (OA.info parser infomod) <> OA.me
 doPlan :: FilePath -> IO ExitCode
 doPlan =
   Programs.runProgramWithConfigFile Programs.planAndPrint
+
+
+-- ** backup
+
+
+-- | Definition for @backup@ CLI command.
+commandBackup :: OA.Parser (FilePath -> IO ExitCode)
+commandBackup = OA.hsubparser (OA.command "backup" (OA.info parser infomod) <> OA.metavar "backup")
+  where
+    infomod = OA.fullDesc <> infoModHeader <> OA.progDesc "Run backups" <> OA.footer "This command runs backup procedure."
+    parser = pure doBackup
+
+
+-- | @backup@ CLI command program.
+doBackup :: FilePath -> IO ExitCode
+doBackup =
+  Programs.runProgramWithConfigFile Programs.backup
 
 
 -- * Helpers

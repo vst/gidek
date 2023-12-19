@@ -10,10 +10,14 @@ module Gidek.Lib.Programs where
 import Control.Monad ((>=>))
 import Control.Monad.Except (ExceptT, MonadError (throwError), runExceptT)
 import Control.Monad.IO.Class (MonadIO (liftIO))
+import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Lazy as BL
 import Data.String.Interpolate (i)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
+import qualified Data.Time as Time
 import qualified Gidek.Lib.Config as Config
+import qualified Gidek.Lib.Git as Git
 import qualified Gidek.Lib.Github as Github
 import qualified Path as P
 import qualified Path.IO as PIO
@@ -133,6 +137,61 @@ printPlans = do
     table ps = Table.tableString (Table.columnHeaderTableS tableCols Table.unicodeS (Table.titlesH tableHeader) (tableRows ps))
 
 
+-- * Backup
+
+
+-- | Performs backup procedure for all repositories of interest as per
+-- given configuration.
+backup
+  :: MonadIO m
+  => MonadError T.Text m
+  => Config.Config
+  -> m ()
+backup cfg = do
+  repos <- Github.listRepositories cfg
+  _log "Starting backup process..."
+  mapM_ (backupRepository cfg) repos
+  _log "Finished backup process."
+
+
+-- | Runs backup procedure on a single repository.
+backupRepository
+  :: MonadIO m
+  => MonadError T.Text m
+  => Config.Config
+  -> Github.GithubRepo
+  -> m ()
+backupRepository cfg@Config.Config {..} repo@Github.GithubRepo {..} = do
+  _log [i|Cloning #{githubRepoOwner}/#{githubRepoName}|]
+  dir <- getRepositoryBackupDirectory cfg repo
+  metadataFile <- getRepositoryMetadataFile cfg repo
+  PIO.ensureDir (P.parent metadataFile)
+  liftIO (BL.writeFile (P.toFilePath metadataFile) (Aeson.encode repo))
+  Git.backup (_buildUri configToken githubRepoUrl) dir
+
+
+-- | Builds URI by injecting GitHub token into the HTTPS uri.
+_buildUri
+  :: T.Text
+  -> T.Text
+  -> T.Text
+_buildUri tok url =
+  "https://" <> tok <> "@" <> T.drop (T.length "https://") url
+
+
+-- * Logging
+
+
+-- | Prints a log message.
+_log
+  :: MonadIO m
+  => T.Text
+  -> m ()
+_log msg = do
+  now <- liftIO Time.getCurrentTime
+  liftIO (TIO.putStrLn [i|[#{Time.formatTime Time.defaultTimeLocale "%Y-%m-%d %H:%M:%S%z" now}] #{msg}|])
+
+
 -- * Directories
 
 
@@ -166,3 +225,14 @@ getRepositoryBackupDirectory
   -> m (P.Path P.Abs P.Dir)
 getRepositoryBackupDirectory cfg repo =
   (P.</> $(P.mkRelDir "data")) <$> getRepositoryDirectory cfg repo
+
+
+-- | Returns the repository metadata file path for a given
+-- configuration and a given repository.
+getRepositoryMetadataFile
+  :: MonadError T.Text m
+  => Config.Config
+  -> Github.GithubRepo
+  -> m (P.Path P.Abs P.File)
+getRepositoryMetadataFile cfg repo =
+  (P.</> $(P.mkRelFile "metadata.json")) <$> getRepositoryDirectory cfg repo

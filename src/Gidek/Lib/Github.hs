@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
@@ -8,6 +9,7 @@ module Gidek.Lib.Github where
 
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO)
+import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Combinators.Decode as ACD
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.List as List
@@ -15,9 +17,11 @@ import Data.String.Interpolate (i)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
+import GHC.Generics (Generic)
 import qualified Gidek.Lib.Config as Config
 import System.Exit (ExitCode (..))
 import qualified System.Process.Typed as TP
+import qualified Zamazingo.Aeson as Z.Aeson
 
 
 -- $setup
@@ -32,7 +36,23 @@ data GithubRepo = GithubRepo
   , githubRepoName :: !T.Text
   , githubRepoOwner :: !T.Text
   }
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Show)
+
+
+instance Aeson.FromJSON GithubRepo where
+  parseJSON = Aeson.genericParseJSON _aesonOptionsGithubRepo
+
+
+instance Aeson.ToJSON GithubRepo where
+  toJSON = Aeson.genericToJSON _aesonOptionsGithubRepo
+
+
+-- | "Aeson" options for decoding and encoding 'GithubRepo' values.
+_aesonOptionsGithubRepo :: Aeson.Options
+_aesonOptionsGithubRepo =
+  Aeson.defaultOptions
+    { Aeson.fieldLabelModifier = Z.Aeson.aesonStripToSnake "githubRepo"
+    }
 
 
 -- | Attempts to list all repositories of interest for a given
