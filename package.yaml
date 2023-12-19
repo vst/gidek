@@ -22,6 +22,7 @@ library:
     - -Werror
     - -Wunused-packages
   dependencies:
+    - aeson
     - optparse-applicative
     - text
 
