@@ -1,26 +1,21 @@
 name: gidek
-version: 0.0.0 # x-release-please-version
-github: "vst/gidek"
+version: 0.0.1
+github: vst/gidek
 license: MIT
-author: "Vehbi Sinan Tunalioglu"
-maintainer: "vst@vsthost.com"
-copyright: "Copyright (c) 2023 Vehbi Sinan Tunalioglu"
-
+author: Vehbi Sinan Tunalioglu
+maintainer: vst@vsthost.com
+copyright: Copyright (c) 2023 Vehbi Sinan Tunalioglu
 extra-source-files:
   - README.md
   - CHANGELOG.md
-
 description: Please see the README on GitHub at <https://github.com/vst/gidek#readme>
-
 dependencies:
   - base >= 4.7 && < 5
-
 library:
   source-dirs: src
   ghc-options:
-    - -Wall
-    # - -Werror
-    - -Wunused-packages
+    - '-Wall'
+    - '-Wunused-packages'
   dependencies:
     - aeson
     - aeson-combinators
@@ -35,41 +30,38 @@ library:
     - time
     - typed-process
     - yaml
-
 executables:
   gidek:
     main: Main.hs
     source-dirs: app
     ghc-options:
-      - -Wall
-      - -Werror
-      - -Wunused-packages
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
+      - '-Wall'
+      - '-Werror'
+      - '-Wunused-packages'
+      - '-threaded'
+      - '-rtsopts'
+      - '-with-rtsopts=-N'
     dependencies:
       - gidek
-
 tests:
   gidek-test:
     main: Spec.hs
     source-dirs: test/spec
     ghc-options:
-      - -Wall
-      - -Werror
-      - -Wunused-packages
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
+      - '-Wall'
+      - '-Werror'
+      - '-Wunused-packages'
+      - '-threaded'
+      - '-rtsopts'
+      - '-with-rtsopts=-N'
     dependencies: []
-
   gidek-doctest:
     main: doctest.hs
     source-dirs: test/doctest
     ghc-options:
-      - -Wall
-      - -Werror
-      - -threaded
+      - '-Wall'
+      - '-Werror'
+      - '-threaded'
     dependencies:
       - gidek
       - doctest
