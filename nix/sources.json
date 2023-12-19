@@ -10,5 +10,17 @@
         "type": "tarball",
         "url": "https://github.com/NixOS/nixpkgs/archive/867ebbdbebc107448d716fb1c514afa681d735a3.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "table-layout": {
+        "branch": "v1.0.0.0",
+        "description": "Layout data in grids and pretty tables. Provides a lot of tools to get the cell formatting right (positional alignment, alignment on specific characters and limiting of cell width)..",
+        "homepage": null,
+        "owner": "muesli4",
+        "repo": "table-layout",
+        "rev": "6f08dac276b16c53125503daef0f07b206540bb3",
+        "sha256": "1nwrs8af4njp66vdy8q171lashszk7sf8cl0by2xywx7vrq2k701",
+        "type": "tarball",
+        "url": "https://github.com/muesli4/table-layout/archive/6f08dac276b16c53125503daef0f07b206540bb3.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }

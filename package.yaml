@@ -30,6 +30,7 @@ library:
     - path
     - path-io
     - string-interpolate
+    - table-layout
     - text
     - typed-process
     - yaml
