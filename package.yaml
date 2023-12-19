@@ -1,5 +1,5 @@
 name: gidek
-version: 0.0.0
+version: 0.0.0 # x-release-please-version
 github: "vst/gidek"
 license: MIT
 author: "Vehbi Sinan Tunalioglu"
