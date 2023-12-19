@@ -16,7 +16,39 @@ GitHub repositories of interest can be specified as:
 
 ## Quickstart
 
-Clone the repository:
+A NixOS module is provided. Using `niv`:
+
+```sh
+niv add vst/gidek -n gidek -b v0.0.1
+```
+
+... add following to your configuration and edit it as per your needs:
+
+```nix
+  imports = [
+    "${sources.gidek}/nix/modules/nixos"
+  ];
+
+  services.gidek = {
+    enable = true;
+    user = "vst";
+    schedule = "Sat *-*-* 00:00:01";
+  };
+
+  programs.gidek = {
+    enable = true;
+    config = {
+      store = "/data/gidek";
+      token_file = config.sops.secrets.github_token.path;
+      repos = [
+        { type = "single"; name = "vst/gidek"; }
+        # { type = "user"; name = "vst"; }
+        # { type = "organization"; name = "fourmolu"; }
+      ];
+  };
+```
+
+Alternatively, clone the repository:
 
 ```sh
 git clone git@github.com:vst/gidek.git
