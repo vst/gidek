@@ -89,7 +89,9 @@ let
 
       ## Other build inputs for various development requirements:
       pkgs.docker-client
+      pkgs.gh
       pkgs.git
+      pkgs.jq
       pkgs.nil
       pkgs.nixpkgs-fmt
       pkgs.nodePackages.prettier
@@ -103,7 +105,11 @@ let
   ## Get the installable application (only static executable):
   thisApp = mkHaskellApp {
     drv = thisHaskell.${thisHaskellPackages.main.name};
-    binPaths = [ ];
+    binPaths = [
+      pkgs.gh
+      pkgs.git
+      pkgs.jq
+    ];
   };
 
   ############
