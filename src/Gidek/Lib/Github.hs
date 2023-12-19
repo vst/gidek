@@ -18,7 +18,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import GHC.Generics (Generic)
-import qualified Gidek.Lib.Config as Config
 import System.Exit (ExitCode (..))
 import qualified System.Process.Typed as TP
 import qualified Zamazingo.Aeson as Z.Aeson
@@ -27,6 +26,58 @@ import qualified Zamazingo.Aeson as Z.Aeson
 -- $setup
 --
 -- >>> :set -XOverloadedStrings
+-- >>> :set -XTypeApplications
+
+
+-- | GitHub repository source specification.
+--
+-- It can be one of (1) a single repository specification, (2) all
+-- repositories owned by a user, or (3) all repositories owned by an
+-- organization.
+data GithubRepoSource
+  = GithubRepoSourceSingle !T.Text
+  | GithubRepoSourceUser !T.Text
+  | GithubRepoSourceOrganization !T.Text
+  deriving (Eq, Generic, Show)
+
+
+-- | 'Aeson.FromJSON' instance for 'GithubRepoSource'.
+--
+-- >>> Aeson.decode @GithubRepoSource "{\"name\":\"vst/gidek\",\"type\":\"single\"}"
+-- Just (GithubRepoSourceSingle "vst/gidek")
+-- >>> Aeson.decode @GithubRepoSource "{\"name\":\"vst\",\"type\":\"user\"}"
+-- Just (GithubRepoSourceUser "vst")
+-- >>> Aeson.decode @GithubRepoSource "{\"name\":\"fourmolu\",\"type\":\"organization\"}"
+-- Just (GithubRepoSourceOrganization "fourmolu")
+-- >>> Z.Aeson.testRoundtrip (GithubRepoSourceSingle "vst/gidek")
+-- True
+-- >>> Z.Aeson.testRoundtrip (GithubRepoSourceUser "vst")
+-- True
+-- >>> Z.Aeson.testRoundtrip (GithubRepoSourceOrganization "vst")
+-- True
+instance Aeson.FromJSON GithubRepoSource where
+  parseJSON = Aeson.genericParseJSON _aesonOptionsGithubRepoSource
+
+
+-- | 'Aeson.FromJSON' instance for 'GithubRepoSource'.
+--
+-- >>> Aeson.encode (GithubRepoSourceSingle "vst/gidek")
+-- "{\"name\":\"vst/gidek\",\"type\":\"single\"}"
+-- >>> Aeson.encode (GithubRepoSourceUser "vst")
+-- "{\"name\":\"vst\",\"type\":\"user\"}"
+-- >>> Aeson.encode (GithubRepoSourceOrganization "fourmolu")
+-- "{\"name\":\"fourmolu\",\"type\":\"organization\"}"
+instance Aeson.ToJSON GithubRepoSource where
+  toJSON = Aeson.genericToJSON _aesonOptionsGithubRepoSource
+
+
+-- | "Aeson" options for decoding and encoding 'GithubRepoSource' values.
+_aesonOptionsGithubRepoSource :: Aeson.Options
+_aesonOptionsGithubRepoSource =
+  Aeson.defaultOptions
+    { Aeson.constructorTagModifier = Z.Aeson.aesonStripToSnake "GithubRepoSource"
+    , Aeson.sumEncoding = Aeson.TaggedObject {Aeson.tagFieldName = "type", Aeson.contentsFieldName = "name"}
+    }
 
 
 -- | Simple GitHub repository data definition.
@@ -55,44 +106,33 @@ _aesonOptionsGithubRepo =
     }
 
 
--- | Attempts to list all repositories of interest for a given
--- configuration value.
+-- | Attempts to list all repositories of interest for a list of
+-- GitHub repositories sources.
 listRepositories
   :: MonadIO m
   => MonadError T.Text m
-  => Config.Config
+  => T.Text
+  -> [GithubRepoSource]
   -> m [GithubRepo]
-listRepositories Config.Config {..} =
-  List.sortOn sortKey . List.nub <$> listRepositoriesAux configToken configRepos
+listRepositories tok sources =
+  List.sortOn sortKey . List.nub . concat <$> mapM (listRepositoriesForSource tok) sources
   where
     sortKey GithubRepo {..} = (githubRepoOwner, githubRepoName)
 
 
--- | Attempts to list all repositories of interest for a given
--- list of repositories specification.
-listRepositoriesAux
+-- | Attempts to list all repositories of interest for a given GitHub
+-- repositories source.
+listRepositoriesForSource
   :: MonadIO m
   => MonadError T.Text m
   => T.Text
-  -> [Config.Repos]
+  -> GithubRepoSource
   -> m [GithubRepo]
-listRepositoriesAux tok reposs =
-  concat <$> mapM (listRepositoriesAuxOne tok) reposs
-
-
--- | Attempts to list all repositories of interest for a given
--- repositories specification.
-listRepositoriesAuxOne
-  :: MonadIO m
-  => MonadError T.Text m
-  => T.Text
-  -> Config.Repos
-  -> m [GithubRepo]
-listRepositoriesAuxOne tok repos =
-  case repos of
-    Config.ReposRepo handle -> (: []) <$> getRepository tok handle
-    Config.ReposUser user -> listUserRepositories tok user
-    Config.ReposOrganization organization -> listOrganizationRepositories tok organization
+listRepositoriesForSource tok source =
+  case source of
+    GithubRepoSourceSingle handle -> (: []) <$> getRepository tok handle
+    GithubRepoSourceUser user -> listUserRepositories tok user
+    GithubRepoSourceOrganization organization -> listOrganizationRepositories tok organization
 
 
 -- | Lists repositories for a given GitHub token and a given user
