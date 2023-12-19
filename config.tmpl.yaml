@@ -1,7 +1,7 @@
 store: /tmp/gidek/store
 token: gho_hebelehubele
 repos:
-  - type: repo
+  - type: single
     name: vst/gidek
   - type: user
     name: vst

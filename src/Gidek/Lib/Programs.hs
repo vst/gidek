@@ -77,8 +77,8 @@ plan
   => MonadError T.Text m
   => Config.Config
   -> m [Plan]
-plan cfg =
-  Github.listRepositories cfg >>= mapM (planRepository cfg)
+plan cfg@Config.Config {..} =
+  Github.listRepositories configToken configRepos >>= mapM (planRepository cfg)
 
 
 -- | Attempts to plan what to expect if the application runs backups
@@ -147,8 +147,8 @@ backup
   => MonadError T.Text m
   => Config.Config
   -> m ()
-backup cfg = do
-  repos <- Github.listRepositories cfg
+backup cfg@Config.Config {..} = do
+  repos <- Github.listRepositories configToken configRepos
   _log "Starting backup process..."
   mapM_ (backupRepository cfg) repos
   _log "Finished backup process."
