@@ -4,11 +4,10 @@
 module Gidek.Cli where
 
 import Control.Applicative ((<**>), (<|>))
-import Control.Monad (join)
 import qualified Data.Text as T
-import qualified Data.Text.IO as TIO
+import qualified Gidek.Lib.Programs as Programs
 import qualified Options.Applicative as OA
-import System.Exit (ExitCode (..))
+import System.Exit (ExitCode, exitWith)
 import qualified Zamazingo.Meta as Z.Meta
 
 
@@ -16,69 +15,74 @@ import qualified Zamazingo.Meta as Z.Meta
 
 
 -- | CLI program entrypoint.
-cli :: IO ExitCode
+cli :: IO ()
 cli =
-  join (OA.execParser (OA.info opts desc))
+  runCliOptions =<< OA.customExecParser pref info
   where
-    opts = optProgram <**> infoOptVersion <**> OA.helper
-    desc =
-      OA.fullDesc
-        <> OA.progDesc "Top Level Commands"
-        <> infoModHeader
-        <> infoModFooter
+    pref = OA.prefs (OA.showHelpOnError <> OA.helpLongEquals <> OA.helpShowGlobals)
+    pars = optCliOptions <**> infoOptVersion <**> OA.helper
+    desc = OA.fullDesc <> OA.progDesc "Top Level Commands" <> infoModHeader <> infoModFooter
+    info = OA.info pars desc
 
 
 -- * Program
 
 
--- | Option parser for top-level commands.
-optProgram :: OA.Parser (IO ExitCode)
-optProgram =
-  commandGreet
-    <|> commandFarewell
+-- | CLI options definition.
+data CliOptions = CliOptions
+  { cliOptionsConfigFile :: !FilePath
+  , cliOptionsCommand :: !(FilePath -> IO ExitCode)
+  }
+
+
+-- | Option parser for 'CliOptions'.
+optCliOptions :: OA.Parser CliOptions
+optCliOptions =
+  CliOptions
+    <$> OA.strOption (OA.short 'c' <> OA.long "config" <> OA.metavar "CONFIG-FILE" <> OA.help "Path to configuration file")
+    <*> (commandPlan <|> commandBackup)
+
+
+-- | Runs 'CliOptions'.
+runCliOptions :: CliOptions -> IO ()
+runCliOptions (CliOptions o s) = s o >>= exitWith
 
 
 -- * Commands
 
 
--- ** greet
+-- ** plan
 
 
--- | Definition for @greet@ CLI command.
-commandGreet :: OA.Parser (IO ExitCode)
-commandGreet = OA.hsubparser (OA.command "greet" (OA.info parser infomod) <> OA.metavar "greet")
+-- | Definition for @plan@ CLI command.
+commandPlan :: OA.Parser (FilePath -> IO ExitCode)
+commandPlan = OA.hsubparser (OA.command "plan" (OA.info parser infomod) <> OA.metavar "plan")
   where
-    infomod = OA.fullDesc <> infoModHeader <> OA.progDesc "Greet user." <> OA.footer "This command prints a greeting message to the console."
-    parser =
-      doGreet
-        <$> OA.strOption (OA.short 'n' <> OA.long "name" <> OA.value "World" <> OA.showDefault <> OA.help "Whom to greet.")
+    infomod = OA.fullDesc <> infoModHeader <> OA.progDesc "Show backup plan" <> OA.footer "This command tabulates the backup plan."
+    parser = pure doPlan
 
 
--- | @greet@ CLI command program.
-doGreet :: T.Text -> IO ExitCode
-doGreet n = do
-  TIO.putStrLn ("Hello " <> n <> "!")
-  pure ExitSuccess
+-- | @plan@ CLI command program.
+doPlan :: FilePath -> IO ExitCode
+doPlan =
+  Programs.runProgramWithConfigFile Programs.planAndPrint
 
 
--- ** farewell
+-- ** backup
 
 
--- | Definition for @farewell@ CLI command.
-commandFarewell :: OA.Parser (IO ExitCode)
-commandFarewell = OA.hsubparser (OA.command "farewell" (OA.info parser infomod) <> OA.metavar "farewell")
+-- | Definition for @backup@ CLI command.
+commandBackup :: OA.Parser (FilePath -> IO ExitCode)
+commandBackup = OA.hsubparser (OA.command "backup" (OA.info parser infomod) <> OA.metavar "backup")
   where
-    infomod = OA.fullDesc <> infoModHeader <> OA.progDesc "Say farewell to user." <> OA.footer "This command prints a farewell message to the console."
-    parser =
-      doFarewell
-        <$> OA.strOption (OA.short 'n' <> OA.long "name" <> OA.value "World" <> OA.showDefault <> OA.help "Whom to say farewell to.")
+    infomod = OA.fullDesc <> infoModHeader <> OA.progDesc "Run backups" <> OA.footer "This command runs backup procedure."
+    parser = pure doBackup
 
 
--- | @farewell@ CLI command program.
-doFarewell :: T.Text -> IO ExitCode
-doFarewell n = do
-  TIO.putStrLn ("Thanks for all the fish, " <> n <> "!")
-  pure ExitSuccess
+-- | @backup@ CLI command program.
+doBackup :: FilePath -> IO ExitCode
+doBackup =
+  Programs.runProgramWithConfigFile Programs.backup
 
 
 -- * Helpers

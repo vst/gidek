@@ -1,6 +1,7 @@
 *.cabal
 *~
 /.direnv
+/config.yaml
 /dist
 /dist-newstyle
 /result

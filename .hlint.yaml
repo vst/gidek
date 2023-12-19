@@ -18,6 +18,7 @@
     - { name: Data.Text, as: T }
     - { name: Data.Text.Lazy, as: TL }
     - { name: Data.Text.Encoding, as: TE }
+    - { name: Zamazingo.Aeson, as: Z.Aeson, importStyle: qualified, asRequired: true }
     - { name: Zamazingo.Meta, as: Z.Meta, importStyle: qualified, asRequired: true }
     - { name: Zamazingo.Text, as: Z.Text, importStyle: qualified, asRequired: true }
     - { name: Data.Text.IO, as: TIO }
@@ -30,7 +31,12 @@
 - extensions:
     - default: false # All extension are banned by default.
     - name:
+        - DeriveGeneric
+        - FlexibleContexts
         - OverloadedStrings
+        - QuasiQuotes
+        - RecordWildCards
+        - TemplateHaskell
 
 ################
 # CUSTOM RULES #

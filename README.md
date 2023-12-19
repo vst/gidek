@@ -14,6 +14,54 @@ GitHub repositories of interest can be specified as:
 2. All GitHub repositories which belong to specific GitHub users or
    organizations, ie. owners.
 
+## Quickstart
+
+Clone the repository:
+
+```sh
+git clone git@github.com:vst/gidek.git
+cd gidek
+```
+
+Using `nix profile`:
+
+```sh
+nix profile install --file default.nix app
+```
+
+Using `nix-env`
+
+```sh
+nix-env -i -f default.nix -A app
+```
+
+Create a configuration file:
+
+```sh
+cat <<EOF > config.yaml
+store: /tmp/gidek/store
+token: $(gh auth token)
+repos:
+  - type: repo
+    name: vst/gidek
+  - type: user
+    name: vst
+  - type: organization
+    name: fourmolu
+EOF
+```
+
+Plan backups:
+
+```sh
+gidek --config config.yaml plan
+```
+
+Run backups:
+
+```sh
+gidek --config config.yaml backup
+```
 
 ## Development
 

@@ -1,0 +1,9 @@
+store: /tmp/gidek/store
+token: gho_hebelehubele
+repos:
+  - type: repo
+    name: vst/gidek
+  - type: user
+    name: vst
+  - type: organization
+    name: fourmolu
