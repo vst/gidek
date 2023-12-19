@@ -23,11 +23,15 @@ library:
     - -Wunused-packages
   dependencies:
     - aeson
+    - aeson-combinators
+    - bytestring
     - mtl
     - optparse-applicative
     - path
     - path-io
+    - string-interpolate
     - text
+    - typed-process
     - yaml
 
 executables:
