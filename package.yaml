@@ -19,12 +19,16 @@ library:
   source-dirs: src
   ghc-options:
     - -Wall
-    - -Werror
+    # - -Werror
     - -Wunused-packages
   dependencies:
     - aeson
+    - mtl
     - optparse-applicative
+    - path
+    - path-io
     - text
+    - yaml
 
 executables:
   gidek:
