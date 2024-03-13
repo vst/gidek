@@ -106,6 +106,7 @@ let
   thisApp = mkHaskellApp {
     drv = thisHaskell.${thisHaskellPackages.main.name};
     binPaths = [
+      pkgs.bashInteractive
       pkgs.gh
       pkgs.git
       pkgs.jq

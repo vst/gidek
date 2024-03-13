@@ -39,7 +39,7 @@ data CliOptions = CliOptions
 optCliOptions :: OA.Parser CliOptions
 optCliOptions =
   CliOptions
-    <$> OA.strOption (OA.short 'c' <> OA.long "config" <> OA.metavar "CONFIG-FILE" <> OA.help "Path to configuration file")
+    <$> OA.strOption (OA.short 'c' <> OA.long "config" <> OA.metavar "CONFIG-FILE" <> OA.action "file" <> OA.help "Path to configuration file")
     <*> (commandPlan <|> commandBackup)
 
 
