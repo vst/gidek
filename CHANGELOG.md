@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2](https://github.com/vst/gidek/compare/v0.0.1...v0.0.2) (2024-03-13)
+
+
+### Bug Fixes
+
+* mark CLI options with relevant action when applicable ([8cda715](https://github.com/vst/gidek/commit/8cda7156a844d81fa25f995b61c0f0ea90331784))
+* **pkg:** install shell completions in Nix builds ([baccd03](https://github.com/vst/gidek/commit/baccd038fc6865abd80bda50fac83ced84a51b1b))
+
 ## 0.0.1 (2023-12-19)
 
 
