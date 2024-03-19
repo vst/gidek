@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3](https://github.com/vst/gidek/compare/v0.0.2...v0.0.3) (2024-03-19)
+
+
+### Bug Fixes
+
+* **nix:** fix shell completion installation ([d4a1de3](https://github.com/vst/gidek/commit/d4a1de30111a1f514e03e580b614220496840ab5))
+
 ## [0.0.2](https://github.com/vst/gidek/compare/v0.0.1...v0.0.2) (2024-03-13)
 
 
