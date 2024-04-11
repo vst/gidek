@@ -14,8 +14,8 @@ dependencies:
 library:
   source-dirs: src
   ghc-options:
-    - '-Wall'
-    - '-Wunused-packages'
+    - "-Wall"
+    - "-Wunused-packages"
   dependencies:
     - aeson
     - aeson-combinators
@@ -35,12 +35,12 @@ executables:
     main: Main.hs
     source-dirs: app
     ghc-options:
-      - '-Wall'
-      - '-Werror'
-      - '-Wunused-packages'
-      - '-threaded'
-      - '-rtsopts'
-      - '-with-rtsopts=-N'
+      - "-Wall"
+      - "-Werror"
+      - "-Wunused-packages"
+      - "-threaded"
+      - "-rtsopts"
+      - "-with-rtsopts=-N"
     dependencies:
       - gidek
 tests:
@@ -48,20 +48,20 @@ tests:
     main: Spec.hs
     source-dirs: test/spec
     ghc-options:
-      - '-Wall'
-      - '-Werror'
-      - '-Wunused-packages'
-      - '-threaded'
-      - '-rtsopts'
-      - '-with-rtsopts=-N'
+      - "-Wall"
+      - "-Werror"
+      - "-Wunused-packages"
+      - "-threaded"
+      - "-rtsopts"
+      - "-with-rtsopts=-N"
     dependencies: []
   gidek-doctest:
     main: doctest.hs
     source-dirs: test/doctest
     ghc-options:
-      - '-Wall'
-      - '-Werror'
-      - '-threaded'
+      - "-Wall"
+      - "-Werror"
+      - "-threaded"
     dependencies:
       - gidek
       - doctest
