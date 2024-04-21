@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.4](https://github.com/vst/gidek/compare/v0.0.3...v0.0.4) (2024-04-21)
+
+
+### Features
+
+* add script to build statically compiled executables ([101b7ed](https://github.com/vst/gidek/commit/101b7ede37c87a0c30a6ada57c27e71fdad629dd))
+* auto-build+upload statically compiled executable during release ([03e0852](https://github.com/vst/gidek/commit/03e0852545b0bf313900af7b55b0afb5fd40c4ba))
+
 ## [0.0.3](https://github.com/vst/gidek/compare/v0.0.2...v0.0.3) (2024-03-19)
 
 
