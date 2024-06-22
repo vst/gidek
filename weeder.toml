@@ -1,0 +1,10 @@
+roots = [
+  ## Definitions we always need:
+  "^Main.main$",
+  "^Gidek.Cli.*$",
+  "^Paths_gidek.*",
+
+  ## Temporary suspensions:
+  "^Zamazingo.*",
+]
+type-class-roots = true
