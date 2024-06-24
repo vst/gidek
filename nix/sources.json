@@ -1,26 +1,14 @@
 {
     "nixpkgs": {
-        "branch": "release-23.11",
+        "branch": "release-24.05",
         "description": "Nix Packages collection",
         "homepage": null,
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "867ebbdbebc107448d716fb1c514afa681d735a3",
-        "sha256": "1hv4qnxqbxbq53hihdnnkl2m3a89aiy7gh25f1z6jg2jnb0slr00",
+        "rev": "5defcb4b0d6c286e8b4b2869cf38efb4cdeb5bf4",
+        "sha256": "1h9zif0mgyn46z1zd95zzkl1bv7q7mab6ydgk186rax5l8k99ixg",
         "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/867ebbdbebc107448d716fb1c514afa681d735a3.tar.gz",
-        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
-    },
-    "table-layout": {
-        "branch": "v1.0.0.0",
-        "description": "Layout data in grids and pretty tables. Provides a lot of tools to get the cell formatting right (positional alignment, alignment on specific characters and limiting of cell width)..",
-        "homepage": null,
-        "owner": "muesli4",
-        "repo": "table-layout",
-        "rev": "6f08dac276b16c53125503daef0f07b206540bb3",
-        "sha256": "1nwrs8af4njp66vdy8q171lashszk7sf8cl0by2xywx7vrq2k701",
-        "type": "tarball",
-        "url": "https://github.com/muesli4/table-layout/archive/6f08dac276b16c53125503daef0f07b206540bb3.tar.gz",
+        "url": "https://github.com/NixOS/nixpkgs/archive/5defcb4b0d6c286e8b4b2869cf38efb4cdeb5bf4.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
