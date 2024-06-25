@@ -1,0 +1,25 @@
+name: "Check Codebase"
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout Codebase"
+        uses: "actions/checkout@v4"
+
+      - name: "Install Nix"
+        uses: "cachix/install-nix-action@v27"
+        with:
+          nix_path: "nixpkgs=channel:nixos-24.05"
+
+      - name: "Use Magic Nix Cache"
+        uses: "DeterminateSystems/magic-nix-cache-action@v7"
+
+      - name: "Check Codebase"
+        run: |
+          nix-shell --pure --run "dev-test-build"
