@@ -101,6 +101,7 @@ let
       pkgs.nil
       pkgs.nixpkgs-fmt
       pkgs.nodePackages.prettier
+      pkgs.upx
 
       ## Our custom development stuff:
       dev-test-build
