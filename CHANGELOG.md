@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.5](https://github.com/vst/gidek/compare/v0.0.4...v0.0.5) (2025-03-15)
+
+
+### Bug Fixes
+
+* **build:** add upx to Nix shell for static build ([884c611](https://github.com/vst/gidek/commit/884c611ce2f617c056c459c2fea9da64b4f21f78))
+* **deps:** upgrade nixpkgs to v24.11 ([6fab322](https://github.com/vst/gidek/commit/6fab322ff0920941632db291f1103cebeda6b0af))
+* **deps:** use ghc 9.6.6 for static builds ([b0ef9c5](https://github.com/vst/gidek/commit/b0ef9c5270728b917010610980673ff329219e47))
+
 ## [0.0.4](https://github.com/vst/gidek/compare/v0.0.3...v0.0.4) (2024-04-21)
 
 
