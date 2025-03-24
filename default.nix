@@ -1,5 +1,4 @@
 { sources ? import ./nix/sources.nix
-, compiler ? "default"
 , system ? builtins.currentSystem
 , ...
 }:
@@ -19,43 +18,22 @@ let
   ## Load the YAML reader:
   readYAML = pkgs.callPackage ./nix/lib/read-yaml.nix { };
 
-  ## Load Haskell package factory:
-  mkHaskell = pkgs.callPackage ./nix/lib/mk-haskell.nix { };
-
-  ## Load Haskell application factory:
-  mkHaskellApp = pkgs.callPackage ./nix/lib/mk-haskell-app.nix { };
-
-  ###########################
-  ## ESSENTIAL INFORMATION ##
-  ###########################
+  ##############################
+  ## LOAD PACKAGE INFORMATION ##
+  ##############################
 
   ## Get the main Haskell package specification:
-  packageSpec = readYAML (thisHaskellPackages.main.path + "/package.yaml");
+  packageSpec = readYAML ./package.yaml;
 
   #############
   ## HASKELL ##
   #############
 
-  ## Get Haskell packages in the project:
-  thisHaskellPackages = {
-    main = {
-      name = packageSpec.name;
-      path = ./.;
-    };
-    subs = [ ];
-  };
-
-  ## Get Haskell packages in the project as a list:
-  thisHaskellPackagesAll = [ thisHaskellPackages.main ] ++ thisHaskellPackages.subs;
-
-  ## Get base Haskell package set:
-  baseHaskell = if compiler == "default" then pkgs.haskellPackages else pkgs.haskell.packages.${compiler};
-
   ## Get this Haskell package set:
-  thisHaskell = mkHaskell {
-    haskell = baseHaskell;
-    packages = thisHaskellPackagesAll;
-    overrides = _self: _super: { };
+  thisHaskell = pkgs.haskellPackages.override {
+    overrides = self: _super: {
+      "${packageSpec.name}" = self.callCabal2nix "${packageSpec.name}" ./. { };
+    };
   };
 
   ###########
@@ -65,7 +43,7 @@ let
   ## Prepare Nix shell:
   thisShell = thisHaskell.shellFor {
     ## Define packages for the shell:
-    packages = p: builtins.map (x: p.${x.name}) thisHaskellPackagesAll;
+    packages = p: [ p.${packageSpec.name} ];
 
     ## Enable Hoogle:
     withHoogle = false;
@@ -103,15 +81,43 @@ let
   #################
 
   ## Get the installable application (only static executable):
-  thisApp = mkHaskellApp {
-    drv = thisHaskell.${thisHaskellPackages.main.name};
-    binPaths = [
-      pkgs.bashInteractive
-      pkgs.gh
-      pkgs.git
-      pkgs.jq
-    ];
-  };
+  thisApp =
+    let
+      ## Name:
+      name = packageSpec.name;
+
+      ## We need these inputs at buildtime:
+      extraNativeBuildInputs = [
+        pkgs.git
+        pkgs.installShellFiles
+        pkgs.makeWrapper
+      ];
+
+      ## We need these inputs at runtime:
+      binPath = pkgs.lib.makeBinPath [
+        pkgs.bashInteractive
+        pkgs.gh
+        pkgs.git
+        pkgs.jq
+      ];
+
+      ## Post-fixup process:
+      extraPostFixup = ''
+        ## Wrap program:
+        wrapProgram $out/bin/${name} --prefix PATH : ${binPath}
+
+        ## Install completion scripts:
+        installShellCompletion --bash --name  ${name}.bash <($out/bin/${name} --bash-completion-script "$out/bin/${name}")
+        installShellCompletion --fish --name  ${name}.fish <($out/bin/${name} --fish-completion-script "$out/bin/${name}")
+        installShellCompletion --zsh  --name _${name}      <($out/bin/${name} --zsh-completion-script  "$out/bin/${name}")
+      '';
+    in
+    pkgs.haskell.lib.justStaticExecutables (
+      thisHaskell.${packageSpec.name}.overrideAttrs (oldAttrs: {
+        nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ extraNativeBuildInputs;
+        postFixup = (oldAttrs.postFixup or "") + extraPostFixup;
+      })
+    );
 in
 {
   app = thisApp;
