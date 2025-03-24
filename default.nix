@@ -62,13 +62,6 @@ let
   ## SHELL ##
   ###########
 
-  ## Prepare dev-test-build script:
-  dev-test-build = pkgs.writeShellApplication {
-    name = "dev-test-build";
-    text = builtins.readFile ./nix/dev-test-build.sh;
-    runtimeInputs = [ pkgs.bash pkgs.bc pkgs.moreutils ];
-  };
-
   ## Prepare Nix shell:
   thisShell = thisHaskell.shellFor {
     ## Define packages for the shell:
@@ -101,7 +94,7 @@ let
       pkgs.upx
 
       ## Our custom development stuff:
-      dev-test-build
+      (pkgs.callPackage ./nix/dev-test-build { })
     ];
   };
 
