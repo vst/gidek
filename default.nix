@@ -25,9 +25,6 @@ let
   ## Load Haskell application factory:
   mkHaskellApp = pkgs.callPackage ./nix/lib/mk-haskell-app.nix { };
 
-  ## Load Docker image factory for Haskell application:
-  mkHaskellDocker = pkgs.callPackage ./nix/lib/mk-haskell-docker.nix { };
-
   ###########################
   ## ESSENTIAL INFORMATION ##
   ###########################
@@ -58,7 +55,7 @@ let
   thisHaskell = mkHaskell {
     haskell = baseHaskell;
     packages = thisHaskellPackagesAll;
-    overrides = self: super: { };
+    overrides = _self: _super: { };
   };
 
   ###########
@@ -122,18 +119,8 @@ let
       pkgs.jq
     ];
   };
-
-  ############
-  ## DOCKER ##
-  ############
-
-  thisDocker = mkHaskellDocker {
-    app = thisApp;
-    repository = thisHaskell.${thisHaskellPackages.main.name};
-  };
 in
 {
-  shell = thisShell;
   app = thisApp;
-  docker = thisDocker;
+  shell = thisShell;
 }
