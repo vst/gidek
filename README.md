@@ -1,4 +1,9 @@
-# Backup Git(Hub) Repositories
+# gidek - Backup Git(Hub) Repositories
+
+<div align="center">
+  <a href="https://github.com/vst/gidek/releases/latest"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/vst/gidek?style=for-the-badge" /></a>
+  <a href="https://github.com/vst/gidek/actions/workflows/release.yaml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/vst/gidek/release.yaml?style=for-the-badge" /></a>
+</div>
 
 > **TODO** Provide minimum viable documentation.
 
@@ -16,13 +21,8 @@ GitHub repositories of interest can be specified as:
 
 ## Quickstart
 
-A NixOS module is provided. Using `niv`:
-
-```sh
-niv add vst/gidek -n gidek -b v0.0.1
-```
-
-... add following to your configuration and edit it as per your needs:
+A NixOS module is provided for both classic and flake-based Nix setups.
+Add following to your configuration and edit it as per your needs:
 
 ```nix
   imports = [
@@ -104,19 +104,10 @@ Provision `direnv`:
 direnv allow
 ```
 
-Big, long build command for the impatient:
+Big, long build and test command for the impatient:
 
 ```sh
-hpack &&
-    direnv reload &&
-    fourmolu -i app/ src/ test/ &&
-    prettier --write . &&
-    find . -iname "*.nix" -not -path "*/nix/sources.nix" -print0 | xargs --null nixpkgs-fmt &&
-    hlint app/ src/ test/ &&
-    cabal build -O0 &&
-    cabal run -O0 gidek -- --version &&
-    cabal v1-test &&
-    cabal haddock -O0
+dev-test-build
 ```
 
 <!-- REFERENCES -->

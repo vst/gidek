@@ -1,7 +1,7 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
 let
-  gidek = import ../../.. { };
+  gidek = pkgs.callPackage ../../package.nix { };
   cfgProgram = config.programs.gidek;
   cfgService = config.services.gidek;
 in
@@ -58,7 +58,7 @@ in
   };
 
   config = {
-    environment.systemPackages = lib.mkIf (cfgProgram.enable || cfgService.enable) [ gidek.app ];
+    environment.systemPackages = lib.mkIf (cfgProgram.enable || cfgService.enable) [ gidek ];
 
     environment.etc = lib.mkIf (cfgProgram.enable || cfgService.enable) {
       "gidek/config.yaml" = {
@@ -76,7 +76,7 @@ in
           set -e
           gidek --config "/etc/gidek/config.yaml" backup
         '';
-        path = [ gidek.app ];
+        path = [ gidek ];
       };
 
       timers.gidek = {
