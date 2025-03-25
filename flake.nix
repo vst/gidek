@@ -5,9 +5,13 @@
     nixpkgs.url = "github:NixOS/nixpkgs/release-24.11";
   };
 
-  outputs = { flake-utils, nixpkgs, ... }: flake-utils.lib.eachDefaultSystem (system:
+  outputs = { flake-utils, nixpkgs, ... }: {
+    nixosModules = rec {
+      gidek = ./nix/modules/nixos;
+      default = gidek;
+    };
+  } // flake-utils.lib.eachDefaultSystem (system:
     let
-      ## Import nixpkgs:
       pkgs = import nixpkgs { inherit system; };
     in
     {
