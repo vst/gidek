@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.6](https://github.com/vst/gidek/compare/v0.0.5...v0.0.6) (2025-03-25)
+
+
+### Features
+
+* **nix:** add compatibility with classic Nix ([4b9db54](https://github.com/vst/gidek/commit/4b9db5426eda943bc21bb892157db56cae75ae94))
+* **nixos:** revisit NixOS module as per flake setup ([a9cf0fb](https://github.com/vst/gidek/commit/a9cf0fbd4504ecf1201dfbbf2dc2d2c2e66e0c65))
+* **nix:** switch to Nix flakes ([e012e34](https://github.com/vst/gidek/commit/e012e347e179b827a8007059e5477c3a0342515a))
+
 ## [0.0.5](https://github.com/vst/gidek/compare/v0.0.4...v0.0.5) (2025-03-15)
 
 
