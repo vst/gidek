@@ -23,7 +23,8 @@ thisHaskell.shellFor {
   ## Build inputs for development shell:
   buildInputs = [
     ## Haskell related build inputs:
-    thisHaskell.apply-refact
+    ## TODO: Once we are on ghc > 9.10, enable apply-refact again.
+    # thisHaskell.apply-refact
     thisHaskell.cabal-fmt
     thisHaskell.cabal-install
     thisHaskell.cabal2nix
