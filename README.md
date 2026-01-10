@@ -104,10 +104,10 @@ Provision `direnv`:
 direnv allow
 ```
 
-Big, long build and test command for the impatient:
+Check, lint, test and build everything with this:
 
 ```sh
-dev-test-build
+cabal verify [-c | --clean]
 ```
 
 <!-- REFERENCES -->

@@ -1,0 +1,7 @@
+# Big tuples
+# Using tuples of big size (>= 4) can decrease code readability
+# In several places we use 4-tuples, and in one place we use a 5-tuple.
+[[check]]
+id = "STAN-0302"
+scope = "all"
+type = "Exclude"
