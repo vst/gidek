@@ -1,4 +1,6 @@
 {
+  description = "gidek - Backup Git(Hub) Repositories";
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.1.0";
