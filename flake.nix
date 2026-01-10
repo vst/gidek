@@ -7,7 +7,12 @@
   };
 
   outputs =
-    inputs@{ nixpkgs, flake-parts, ... }:
+    inputs@{
+      self,
+      nixpkgs,
+      flake-parts,
+      ...
+    }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         ./nix/flake-modules/read-yaml
@@ -16,8 +21,15 @@
       systems = nixpkgs.lib.systems.flakeExposed;
 
       flake = {
+        overlays.default = final: prev: {
+          gidek = self.packages.${final.system}.default;
+        };
+
         nixosModules = rec {
-          gidek = ./nix/modules/nixos;
+          gidek = {
+            imports = [ ./nix/modules/nixos ];
+            nixpkgs.overlays = [ self.overlays.default ];
+          };
           default = gidek;
         };
       };

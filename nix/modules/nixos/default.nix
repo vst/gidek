@@ -6,44 +6,6 @@
 }:
 
 let
-  packageName = "gidek";
-
-  thisHaskell = pkgs.haskellPackages.override {
-    overrides = self: super: {
-      ${packageName} = self.callCabal2nix packageName ../../. { };
-    };
-  };
-
-  gidek = pkgs.haskell.lib.justStaticExecutables (
-    thisHaskell.${packageName}.overrideAttrs (oldAttrs: {
-      nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [
-        pkgs.git
-        pkgs.installShellFiles
-        pkgs.makeWrapper
-      ];
-
-      postFixup = (oldAttrs.postFixup or "") + ''
-        ## Create output directories:
-        mkdir -p $out/{bin}
-
-        ## Wrap program to add PATHs to dependencies:
-        wrapProgram $out/bin/${packageName} --prefix PATH : ${
-          pkgs.lib.makeBinPath [
-            pkgs.bashInteractive # Added for bash-based CLI option completions
-            pkgs.gh
-            pkgs.git
-            pkgs.jq
-          ]
-        }
-
-        ## Install completion scripts:
-        installShellCompletion --bash --name ${packageName}.bash <($out/bin/${packageName} --bash-completion-script "$out/bin/${packageName}")
-        installShellCompletion --fish --name ${packageName}.fish <($out/bin/${packageName} --fish-completion-script "$out/bin/${packageName}")
-        installShellCompletion --zsh  --name _${packageName}     <($out/bin/${packageName} --zsh-completion-script  "$out/bin/${packageName}")
-      '';
-    })
-  );
-
   cfgProgram = config.programs.gidek;
   cfgService = config.services.gidek;
 in
@@ -51,6 +13,8 @@ in
   options = {
     programs.gidek = {
       enable = lib.mkEnableOption "gidek - Backup Git(Hub) Repositories";
+
+      package = lib.mkPackageOption pkgs "gidek" { };
 
       config = {
         store = lib.mkOption {
@@ -106,7 +70,11 @@ in
   };
 
   config = {
-    environment.systemPackages = lib.mkIf (cfgProgram.enable || cfgService.enable) [ gidek ];
+    programs.gidek.enable = lib.mkIf cfgService.enable true;
+
+    environment.systemPackages = lib.mkIf (cfgProgram.enable || cfgService.enable) [
+      cfgProgram.package
+    ];
 
     environment.etc = lib.mkIf (cfgProgram.enable || cfgService.enable) {
       "gidek/config.yaml" = {
@@ -124,7 +92,7 @@ in
           set -e
           gidek --config "/etc/gidek/config.yaml" backup
         '';
-        path = [ gidek ];
+        path = [ cfgProgram.package ];
       };
 
       timers.gidek = {
