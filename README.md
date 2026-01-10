@@ -7,22 +7,20 @@
 
 > **TODO** Provide minimum viable documentation.
 
-`gidek` lets you backup Git repositories hosted (for now only) on
-[GitHub].
+`gidek` lets you backup Git repositories hosted (for now only) on [GitHub].
 
-The idea is that you specify a list of GitHub repositories to backup
-and `gidek` keeps cloning them everytime it is invoked. The list of
-GitHub repositories of interest can be specified as:
+The idea is that you specify a list of GitHub repositories to backup and `gidek`
+keeps cloning them everytime it is invoked. The list of GitHub repositories of
+interest can be specified as:
 
-1. Specific GitHub repositories by their `[owner]/[repository-name]`
-   handle, or
+1. Specific GitHub repositories by their `[owner]/[repository-name]` handle, or
 2. All GitHub repositories which belong to specific GitHub users or
    organizations, ie. owners.
 
 ## Quickstart
 
-A NixOS module is provided for both classic and flake-based Nix setups.
-Add following to your configuration and edit it as per your needs:
+A NixOS module is provided for both classic and flake-based Nix setups. Add
+following to your configuration and edit it as per your needs:
 
 ```nix
   imports = [
@@ -104,10 +102,10 @@ Provision `direnv`:
 direnv allow
 ```
 
-Big, long build and test command for the impatient:
+Check, lint, test and build everything with this:
 
 ```sh
-dev-test-build
+cabal verify [-c | --clean]
 ```
 
 <!-- REFERENCES -->

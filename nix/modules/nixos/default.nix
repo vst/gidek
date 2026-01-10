@@ -1,7 +1,11 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
-  gidek = pkgs.callPackage ../../package.nix { };
   cfgProgram = config.programs.gidek;
   cfgService = config.services.gidek;
 in
@@ -9,6 +13,8 @@ in
   options = {
     programs.gidek = {
       enable = lib.mkEnableOption "gidek - Backup Git(Hub) Repositories";
+
+      package = lib.mkPackageOption pkgs "gidek" { };
 
       config = {
         store = lib.mkOption {
@@ -29,16 +35,22 @@ in
         };
 
         repos = lib.mkOption {
-          type = lib.types.listOf (lib.types.submodule {
-            options.type = lib.mkOption {
-              type = lib.types.enum [ "single" "user" "organization" ];
-              description = "Type of GitHub repository source (single, user or organization)";
-            };
-            options.name = lib.mkOption {
-              type = lib.types.str;
-              description = "Type of GitHub repository source name.";
-            };
-          });
+          type = lib.types.listOf (
+            lib.types.submodule {
+              options.type = lib.mkOption {
+                type = lib.types.enum [
+                  "single"
+                  "user"
+                  "organization"
+                ];
+                description = "Type of GitHub repository source (single, user or organization)";
+              };
+              options.name = lib.mkOption {
+                type = lib.types.str;
+                description = "Type of GitHub repository source name.";
+              };
+            }
+          );
           description = "List of GitHub repository sources.";
         };
       };
@@ -58,7 +70,11 @@ in
   };
 
   config = {
-    environment.systemPackages = lib.mkIf (cfgProgram.enable || cfgService.enable) [ gidek ];
+    programs.gidek.enable = lib.mkIf cfgService.enable true;
+
+    environment.systemPackages = lib.mkIf (cfgProgram.enable || cfgService.enable) [
+      cfgProgram.package
+    ];
 
     environment.etc = lib.mkIf (cfgProgram.enable || cfgService.enable) {
       "gidek/config.yaml" = {
@@ -76,7 +92,7 @@ in
           set -e
           gidek --config "/etc/gidek/config.yaml" backup
         '';
-        path = [ gidek ];
+        path = [ cfgProgram.package ];
       };
 
       timers.gidek = {

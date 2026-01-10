@@ -1,24 +1,177 @@
 {
+  description = "gidek - Backup Git(Hub) Repositories";
+
   inputs = {
-    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.1.0";
-    flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "github:NixOS/nixpkgs/release-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = { flake-utils, nixpkgs, ... }: {
-    nixosModules = rec {
-      gidek = ./nix/modules/nixos;
-      default = gidek;
-    };
-  } // flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs = import nixpkgs { inherit system; };
-    in
-    {
-      devShell = pkgs.callPackage ./nix/shell.nix { };
-      packages = rec {
-        gidek = pkgs.callPackage ./nix/package.nix { };
-        default = gidek;
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      flake-parts,
+      ...
+    }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        ./nix/flake-modules/read-yaml
+      ];
+
+      systems = nixpkgs.lib.systems.flakeExposed;
+
+      flake = {
+        overlays.default = final: prev: {
+          gidek = self.packages.${final.system}.default;
+        };
+
+        nixosModules = rec {
+          gidek = {
+            imports = [ ./nix/modules/nixos ];
+            nixpkgs.overlays = [ self.overlays.default ];
+          };
+          default = gidek;
+        };
       };
-    });
+
+      perSystem =
+        {
+          config,
+          self',
+          inputs',
+          pkgs,
+          system,
+          readYAML,
+          ...
+        }:
+        let
+          ## Read package information:
+          package = readYAML ./package.yaml;
+
+          ## Get our Haskell:
+          thisHaskell = pkgs.haskellPackages.override {
+            overrides = self: super: {
+              ${package.name} = self.callCabal2nix package.name ./. { };
+            };
+          };
+
+          ## Common build inputs for both development and CI environments:
+          buildInputsCommon = [
+            ## Essential Haskell tools:
+            thisHaskell.cabal-install
+            thisHaskell.fourmolu
+            thisHaskell.hlint
+            thisHaskell.hpack
+            thisHaskell.stan
+            thisHaskell.weeder
+
+            ## Other essentials:
+            pkgs.git
+            pkgs.nixfmt-rfc-style
+            pkgs.prettier
+            pkgs.shellcheck
+            pkgs.shfmt
+            pkgs.statix
+            pkgs.taplo
+
+            ## Our development scripts:
+            (pkgs.callPackage ./nix/cabal-verify { })
+          ];
+
+          ## Development-only inputs:
+          buildInputsDevOnly = [
+            ## Haskell development tools:
+            thisHaskell.haskell-language-server
+            thisHaskell.cabal-fmt
+            thisHaskell.cabal2nix
+
+            ## Other development tools:
+            pkgs.docker-client
+            pkgs.nil
+          ];
+
+          ## Development shell:
+          devShell = thisHaskell.shellFor {
+            packages = p: [ p.${package.name} ];
+            withHoogle = false;
+            buildInputs = buildInputsCommon ++ buildInputsDevOnly;
+          };
+
+          ## CI shell (minimal, fast):
+          ciShell = thisHaskell.shellFor {
+            packages = p: [ p.${package.name} ];
+            withHoogle = false;
+            buildInputs = buildInputsCommon;
+          };
+
+          thisPackage = pkgs.haskell.lib.justStaticExecutables (
+            thisHaskell.${package.name}.overrideAttrs (oldAttrs: {
+              nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [
+                pkgs.git
+                pkgs.installShellFiles
+                pkgs.makeWrapper
+              ];
+
+              postFixup = (oldAttrs.postFixup or "") + ''
+                ## Create output directories:
+                mkdir -p $out/{bin}
+
+                ## Wrap program to add PATHs to dependencies:
+                wrapProgram $out/bin/${package.name} --prefix PATH : ${
+                  pkgs.lib.makeBinPath [
+                    pkgs.bashInteractive # Added for bash-based CLI option completions
+                    pkgs.gh
+                    pkgs.git
+                    pkgs.jq
+                  ]
+                }
+
+                ## Install completion scripts:
+                installShellCompletion --bash --name ${package.name}.bash <($out/bin/${package.name} --bash-completion-script "$out/bin/${package.name}")
+                installShellCompletion --fish --name ${package.name}.fish <($out/bin/${package.name} --fish-completion-script "$out/bin/${package.name}")
+                installShellCompletion --zsh  --name _${package.name}     <($out/bin/${package.name} --zsh-completion-script  "$out/bin/${package.name}")
+              '';
+            })
+          );
+
+          thisDocker = pkgs.dockerTools.buildImage {
+            name = "${package.name}";
+            tag = "v${package.version}";
+            created = "now";
+
+            copyToRoot = pkgs.buildEnv {
+              name = "image-root";
+              paths = [ pkgs.cacert ];
+              pathsToLink = [ "/etc" ];
+            };
+
+            runAsRoot = ''
+              #!${pkgs.runtimeShell}
+              ${pkgs.dockerTools.shadowSetup}
+              groupadd -r users
+              useradd -r -g users patron
+            '';
+
+            config = {
+              User = "patron";
+              Entrypoint = [ "${thisPackage}/bin/${package.name}" ];
+              Cmd = null;
+            };
+          };
+        in
+        {
+          ## Project packages output:
+          packages = {
+            "${package.name}" = thisPackage;
+            docker = thisDocker;
+            default = thisPackage;
+          };
+
+          ## Project development shells:
+          devShells = {
+            default = devShell;
+            ci = ciShell;
+          };
+        };
+    };
 }
