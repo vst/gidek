@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.7](https://github.com/vst/gidek/compare/v0.0.6...v0.0.7) (2026-01-10)
+
+
+### Bug Fixes
+
+* **deps:** upgrade nixpkgs to v25.11, bump flake inputs ([3451682](https://github.com/vst/gidek/commit/3451682fbecfa61ed2cdc071a2048038e61806f9))
+* **nixos:** fix NixOS module definition ([13412d3](https://github.com/vst/gidek/commit/13412d3114225e0157035c4780c213434f3468ac))
+
 ## [0.0.6](https://github.com/vst/gidek/compare/v0.0.5...v0.0.6) (2025-03-25)
 
 
