@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   packageName = "gidek";
@@ -66,16 +71,22 @@ in
         };
 
         repos = lib.mkOption {
-          type = lib.types.listOf (lib.types.submodule {
-            options.type = lib.mkOption {
-              type = lib.types.enum [ "single" "user" "organization" ];
-              description = "Type of GitHub repository source (single, user or organization)";
-            };
-            options.name = lib.mkOption {
-              type = lib.types.str;
-              description = "Type of GitHub repository source name.";
-            };
-          });
+          type = lib.types.listOf (
+            lib.types.submodule {
+              options.type = lib.mkOption {
+                type = lib.types.enum [
+                  "single"
+                  "user"
+                  "organization"
+                ];
+                description = "Type of GitHub repository source (single, user or organization)";
+              };
+              options.name = lib.mkOption {
+                type = lib.types.str;
+                description = "Type of GitHub repository source name.";
+              };
+            }
+          );
           description = "List of GitHub repository sources.";
         };
       };
