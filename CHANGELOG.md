@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.8](https://github.com/vst/gidek/compare/v0.0.7...v0.0.8) (2026-07-05)
+
+
+### Bug Fixes
+
+* **deps:** bump stackage to LTS 24.44 ([8a2407d](https://github.com/vst/gidek/commit/8a2407d1873242675b19c4866ce1d50f876fda58))
+* **deps:** upgrade nixpkgs to v26.05 ([efa8c8d](https://github.com/vst/gidek/commit/efa8c8d091110ec635c4323dfa1794029b931857))
+
 ## [0.0.7](https://github.com/vst/gidek/compare/v0.0.6...v0.0.7) (2026-01-10)
 
 
